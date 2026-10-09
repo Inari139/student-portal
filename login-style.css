@@ -1,120 +1,142 @@
-/* === Minecraft-шрифт для всего === */
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
-/* Общие настройки фона (как в основном стиле) */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 body {
-    font-family: 'Press Start 2P', Arial, sans-serif;
-    background-color: #1a1a2e; /* Темный фон портала */
-    color: #ffffff;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
+  font-family: 'Press Start 2P', cursive;
+  background: #1a1a2e;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
 }
 
-/* Карточка формы входа */
-.login-card {
-    background-color: #2d2d4a; /* Цвет левой панели из style.css */
-    padding: 40px;
-    border-radius: 8px;
-    border: 4px solid #3d3d5c; /* Рамка в стиле карточек */
-    box-shadow: 0 8px 0 #1a1a2e; /* Тень "вдавливания" */
-    width: 100%;
-    max-width: 400px;
-    box-sizing: border-box;
+.login-container {
+  width: 100%;
+  max-width: 450px;
+  padding: 20px;
 }
 
-.login-card h2 {
-    margin-top: 0;
-    margin-bottom: 30px;
-    text-align: center;
-    color: #ffd700; /* Золотой заголовок */
-    text-shadow: 2px 2px 0 #000;
-    font-size: 16px;
-    line-height: 1.5;
+.login-box {
+  background: #2d2d4a;
+  border: 4px solid #3d3d5c;
+  border-radius: 12px;
+  padding: 40px 30px;
+  box-shadow: 0 8px 0 #1a1a2e;
+}
+
+.login-box h1 {
+  color: #ffd700;
+  text-align: center;
+  font-size: 24px;
+  margin-bottom: 30px;
+  text-shadow: 2px 2px 0 #000;
 }
 
 .form-group {
-    margin-bottom: 25px;
+  margin-bottom: 20px;
 }
 
 .form-group label {
-    display: block;
-    margin-bottom: 10px;
-    color: #ffd700; /* Золотые подписи полей */
-    font-size: 11px;
-    text-shadow: 1px 1px 0 #000;
+  display: block;
+  color: #ffd700;
+  font-size: 11px;
+  margin-bottom: 8px;
+  text-shadow: 1px 1px 0 #000;
 }
 
 .form-group input {
-    width: 100%;
-    padding: 12px;
-    font-family: 'Press Start 2P', cursive;
-    font-size: 10px;
-    background-color: #1a1a2e; /* Темный фон поля */
-    border: 3px solid #5a5a8a; /* Синяя рамка */
-    color: #ffffff;
-    border-radius: 4px;
-    box-sizing: border-box;
-    outline: none;
-    transition: border-color 0.2s;
+  width: 100%;
+  padding: 12px 15px;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 10px;
+  background: #1a1a2e;
+  border: 3px solid #5a5a8a;
+  border-radius: 6px;
+  color: #fff;
+  outline: none;
+  transition: border-color 0.2s;
 }
 
 .form-group input:focus {
-    border-color: #7a7cff; /* Подсветка при клике */
+  border-color: #7b68ee;
+  box-shadow: 0 0 0 2px rgba(123, 104, 238, 0.3);
 }
 
-/* Кнопки */
-button {
-    width: 100%;
-    padding: 15px;
-    border: none;
-    border-radius: 4px;
-    font-family: 'Press Start 2P', cursive;
-    font-size: 11px;
-    cursor: pointer;
-    margin-bottom: 15px;
-    transition: all 0.1s;
-    box-shadow: 0 4px 0 rgba(0,0,0,0.4); /* 3D эффект кнопки */
+.form-group input::placeholder {
+  color: #666;
 }
 
-button:active {
-    transform: translateY(4px);
-    box-shadow: none;
+.btn-login {
+  width: 100%;
+  padding: 15px;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 12px;
+  background: #4caf50;
+  color: #fff;
+  border: 3px solid #2e7d32;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 10px;
+  text-shadow: 1px 1px 0 #000;
+  box-shadow: 0 4px 0 #2e7d32;
+  transition: all 0.1s;
 }
 
-.btn-submit {
-    background-color: #69896a; /* Зеленый как кнопка добавления */
-    color: white;
-    border: 3px solid #203620;
+.btn-login:hover {
+  background: #66bb6a;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 #2e7d32;
 }
 
-.btn-submit:hover {
-    background-color: #7aa07b;
+.btn-login:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #2e7d32;
 }
 
 .btn-back {
-    background-color: #5a5a8a; /* Серо-синий как шапка */
-    color: white;
-    border: 3px solid #3d3d5c;
-    margin-bottom: 0;
+  display: block;
+  width: 100%;
+  padding: 12px;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 10px;
+  background: #5a5a8a;
+  color: #fff;
+  border: 3px solid #3d3d5c;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 15px;
+  text-align: center;
+  text-decoration: none;
+  text-shadow: 1px 1px 0 #000;
+  box-shadow: 0 4px 0 #3d3d5c;
+  transition: all 0.1s;
 }
 
 .btn-back:hover {
-    background-color: #6b6ba0;
+  background: #7b68ee;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 #3d3d5c;
 }
 
-/* Ошибки */
+.btn-back:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #3d3d5c;
+}
+
 .error {
-    color: #ff5252;
-    font-size: 10px;
-    text-align: center;
-    margin-top: 15px;
-    text-shadow: 1px 1px 0 #000;
+  color: #ff5252;
+  font-size: 9px;
+  text-align: center;
+  margin-top: 15px;
+  text-shadow: 1px 1px 0 #000;
 }
 
 .hidden {
-    display: none;
+  display: none;
 }
