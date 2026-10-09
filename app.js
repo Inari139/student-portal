@@ -94,26 +94,34 @@ async function initDatabase() {
     defaultStudents.forEach(s => { obj[s.id] = s; });
     await set(ref(db, 'students'), obj);
   }
+
   const templatesSnap = await get(ref(db, 'templates'));
   if (!templatesSnap.exists()) {
     const obj = {};
     defaultTemplates.forEach(t => { obj[t.id] = t; });
     await set(ref(db, 'templates'), obj);
   }
+
   const categoriesSnap = await get(ref(db, 'categories'));
   if (!categoriesSnap.exists()) {
     const obj = {};
     achievementCategories.forEach(c => { obj[c.id] = c; });
     await set(ref(db, 'categories'), obj);
   }
+
   const achievementsSnap = await get(ref(db, 'achievements'));
-  if (!achievementsSnap.exists()) await set(ref(db, 'achievements'), {});
+  if (!achievementsSnap.exists()) {
+    await set(ref(db, 'achievements'), {});
+  }
+
   const requestsSnap = await get(ref(db, 'requests'));
-  if (!requestsSnap.exists()) await set(ref(db, 'requests'), {});
+  if (!requestsSnap.exists()) {
+    await set(ref(db, 'requests'), {});
+  }
 }
 
 // ============================================
-// 4. ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ (КЭШ FIREBASE)
+// 4. ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ
 // ============================================
 let activeStudentId = null;
 let editingId = null;
@@ -132,7 +140,7 @@ const currentRole = localStorage.getItem('role') || 'guest';
 const studentId = localStorage.getItem('studentId');
 
 // ============================================
-// 5. АВТОПОДПИСКА НА FIREBASE (СИНХРОНИЗАЦИЯ)
+// 5. АВТОПОДПИСКА НА FIREBASE (Синхронизация)
 // ============================================
 onValue(ref(db, 'students'), (snapshot) => {
   const data = snapshot.val() || {};
@@ -171,8 +179,9 @@ onValue(ref(db, 'requests'), (snapshot) => {
   const data = snapshot.val() || {};
   cachedRequests = Object.values(data);
   if (currentTab === 'requests') renderRequests();
+  const pendingCount = cachedRequests.filter(r => r.status === 'pending').length;
   const countEl = document.getElementById('requests-count');
-  if (countEl) countEl.textContent = cachedRequests.filter(r => r.status === 'pending').length;
+  if (countEl) countEl.textContent = pendingCount;
 });
 
 // ============================================
@@ -201,6 +210,7 @@ const addTemplateBtn = document.getElementById('add-template-btn');
 function switchTab(tabName) {
   currentTab = tabName;
   currentCategory = null;
+
   [tabStudent, tabTemplate, tabProfile, tabArchive, tabRequests].forEach(t => t && t.classList.remove('active-tab'));
   [viewStudent, viewTemplate, viewProfile, viewArchive, viewRequests].forEach(v => v && (v.style.display = 'none'));
 
@@ -233,7 +243,11 @@ tabTemplate && tabTemplate.addEventListener('click', () => switchTab('template')
 tabProfile && tabProfile.addEventListener('click', () => switchTab('profile'));
 tabArchive && tabArchive.addEventListener('click', () => switchTab('archive'));
 tabRequests && tabRequests.addEventListener('click', () => switchTab('requests'));
-backToCategoriesBtn && backToCategoriesBtn.addEventListener('click', () => { currentCategory = null; renderTemplatesView(); });
+
+backToCategoriesBtn && backToCategoriesBtn.addEventListener('click', () => {
+  currentCategory = null;
+  renderTemplatesView();
+});
 
 // ============================================
 // 8. АВТОРИЗАЦИЯ
@@ -241,7 +255,11 @@ backToCategoriesBtn && backToCategoriesBtn.addEventListener('click', () => { cur
 if (currentRole === 'admin') {
   userStatus.textContent = 'Администратор';
   authBtn.textContent = 'Выйти';
-  authBtn.onclick = () => { localStorage.removeItem('role'); localStorage.removeItem('studentId'); location.reload(); };
+  authBtn.onclick = () => {
+    localStorage.removeItem('role');
+    localStorage.removeItem('studentId');
+    location.reload();
+  };
   adminElements.forEach(el => el.classList.remove('hidden'));
   studentControls && studentControls.classList.remove('hidden');
   addTemplateBtn && addTemplateBtn.classList.remove('hidden');
@@ -249,11 +267,17 @@ if (currentRole === 'admin') {
 } else if (currentRole === 'student') {
   const myData = cachedStudents.find(s => s.id == studentId);
   if (!myData) {
-    localStorage.removeItem('role'); localStorage.removeItem('studentId'); window.location.href = 'login.html';
+    localStorage.removeItem('role');
+    localStorage.removeItem('studentId');
+    window.location.href = 'login.html';
   } else {
     userStatus.textContent = myData.name;
     authBtn.textContent = 'Выйти';
-    authBtn.onclick = () => { localStorage.removeItem('role'); localStorage.removeItem('studentId'); location.reload(); };
+    authBtn.onclick = () => {
+      localStorage.removeItem('role');
+      localStorage.removeItem('studentId');
+      location.reload();
+    };
     adminElements.forEach(el => el.classList.add('hidden'));
     studentControls && studentControls.classList.add('hidden');
     addTemplateBtn && addTemplateBtn.classList.add('hidden');
@@ -282,13 +306,17 @@ function renderStudents() {
   const listContainer = document.getElementById('students-list');
   if (!listContainer) return;
   listContainer.innerHTML = '';
+
   const activeStudents = cachedStudents.filter(s => !s.archived);
 
   activeStudents.forEach(student => {
     const li = document.createElement('li');
     const avatarSrc = student.avatar ? student.avatar : 'avatar-default.jpg';
     li.innerHTML = `<img src="${avatarSrc}" alt="Аватар" class="student-list-avatar"><span class="student-list-name">${student.name}</span>`;
-    if (student.id == activeStudentId) li.classList.add('active');
+
+    if (student.id == activeStudentId) {
+      li.classList.add('active');
+    }
 
     li.addEventListener('click', () => {
       activeStudentId = student.id;
@@ -298,6 +326,7 @@ function renderStudents() {
       renderProfile();
       if (currentTab === 'template') renderTemplatesView();
     });
+
     listContainer.appendChild(li);
   });
 
@@ -325,25 +354,33 @@ function renderTemplatesView() {
       const card = document.createElement('div');
       card.className = 'category-card';
       card.innerHTML = `<h3>${cat.title}</h3><p>${cat.desc}</p>`;
+
       if (currentRole === 'admin') {
         const actions = document.createElement('div');
         actions.className = 'card-actions';
         actions.style.position = 'static';
         actions.style.marginTop = '10px';
         actions.style.justifyContent = 'center';
+
         const editBtn = document.createElement('button');
         editBtn.innerHTML = '✏️';
         editBtn.className = 'btn-edit';
         editBtn.onclick = (e) => { e.stopPropagation(); editCategory(cat.id); };
+
         const delBtn = document.createElement('button');
         delBtn.innerHTML = '🗑️';
         delBtn.className = 'btn-delete';
         delBtn.onclick = (e) => { e.stopPropagation(); deleteCategory(cat.id); };
+
         actions.appendChild(editBtn);
         actions.appendChild(delBtn);
         card.appendChild(actions);
       }
-      card.addEventListener('click', () => { currentCategory = cat.id; renderTemplatesView(); });
+
+      card.addEventListener('click', () => {
+        currentCategory = cat.id;
+        renderTemplatesView();
+      });
       container.appendChild(card);
     });
 
@@ -359,8 +396,10 @@ function renderTemplatesView() {
   } else {
     const catInfo = cachedCategories.find(c => c.id === currentCategory);
     headerTitle.textContent = catInfo ? catInfo.title : 'Достижения';
+
     if (backToCategoriesBtn) backToCategoriesBtn.style.display = 'inline-block';
     if (addTemplateBtn) addTemplateBtn.style.display = 'inline-block';
+
     container.className = 'achievements-grid';
     const filtered = cachedTemplates.filter(t => t.category === currentCategory);
     renderCards(container, filtered, false);
@@ -372,6 +411,7 @@ function renderTemplatesView() {
 // ============================================
 function renderCards(container, dataArray, isStudentView) {
   container.innerHTML = '';
+
   if (dataArray.length === 0) {
     container.innerHTML = '<p class="placeholder">В этой категории пока нет достижений.</p>';
     return;
@@ -383,13 +423,21 @@ function renderCards(container, dataArray, isStudentView) {
 
     let isAssigned = false;
     if (!isStudentView && activeStudentId) {
-      isAssigned = cachedAchievements.some(a => a.studentId === activeStudentId && a.title === item.title && a.category === item.category);
+      isAssigned = cachedAchievements.some(a =>
+        a.studentId === activeStudentId &&
+        a.title === item.title &&
+        a.category === item.category
+      );
       if (isAssigned) card.classList.add('assigned');
     }
 
     let hasRequest = false;
     if (currentRole === 'student' && !isStudentView) {
-      hasRequest = cachedRequests.some(r => r.studentId == studentId && r.templateId === item.id && r.status === 'pending');
+      hasRequest = cachedRequests.some(r =>
+        r.studentId == studentId &&
+        r.templateId === item.id &&
+        r.status === 'pending'
+      );
     }
 
     if (currentRole === 'admin' && item.id === editingId) {
@@ -409,36 +457,79 @@ function renderCards(container, dataArray, isStudentView) {
         <div class="edit-actions">
           <button class="btn-save" data-id="${item.id}">✓ Сохранить</button>
           <button class="btn-cancel">✕ Отмена</button>
-        </div>`;
+        </div>
+      `;
     } else {
       let actionsHtml = '';
       if (currentRole === 'admin') {
-        actionsHtml = `<div class="card-actions">
-          <button class="btn-edit" data-id="${item.id}">✏️</button>
-          <button class="btn-delete" data-id="${item.id}">🗑️</button>
-          ${!isStudentView ? `<button class="btn-assign" data-id="${item.id}">🎁</button>` : ''}
-        </div>`;
+        actionsHtml = `
+          <div class="card-actions">
+            <button class="btn-edit" data-id="${item.id}">✏️</button>
+            <button class="btn-delete" data-id="${item.id}">🗑️</button>
+            ${!isStudentView ? `<button class="btn-assign" data-id="${item.id}"></button>` : ''}
+          </div>`;
       } else if (currentRole === 'student' && !isStudentView && !isAssigned) {
         if (hasRequest) {
-          actionsHtml = `<div class="card-actions"><button class="btn-requested" disabled style="opacity:0.6;cursor:not-allowed;">⏳ Запрос отправлен</button></div>`;
+          actionsHtml = `
+            <div class="card-actions">
+              <button class="btn-requested" disabled style="opacity:0.6;cursor:not-allowed;"> Запрос отправлен</button>
+            </div>`;
         } else {
-          actionsHtml = `<div class="card-actions"><button class="btn-request" data-id="${item.id}">📩 Запросить</button></div>`;
+          actionsHtml = `
+            <div class="card-actions">
+              <button class="btn-request" data-id="${item.id}">📩 Запросить</button>
+            </div>`;
         }
       }
+
       const iconHtml = item.background ? `<img src="${item.background}" class="achievement-icon">` : '';
-      card.innerHTML = `<div class="mc-achievement">${iconHtml}<div class="achievement-text"><h3>${item.title}</h3><p>${item.desc}</p></div>${actionsHtml}</div>`;
+      card.innerHTML = `
+        <div class="mc-achievement">
+          ${iconHtml}
+          <div class="achievement-text">
+            <h3>${item.title}</h3>
+            <p>${item.desc}</p>
+          </div>
+          ${actionsHtml}
+        </div>`;
     }
     container.appendChild(card);
   });
 
   if (currentRole === 'admin') {
-    container.querySelectorAll('.btn-edit').forEach(btn => btn.addEventListener('click', e => { e.stopPropagation(); editingId = parseInt(btn.dataset.id); isStudentView ? renderAchievements(activeStudentId) : renderTemplatesView(); }));
-    container.querySelectorAll('.btn-delete').forEach(btn => btn.addEventListener('click', e => { e.stopPropagation(); deleteItem(parseInt(btn.dataset.id), !isStudentView); }));
-    container.querySelectorAll('.btn-save').forEach(btn => btn.addEventListener('click', e => { e.stopPropagation(); saveEdit(parseInt(btn.dataset.id), !isStudentView); }));
-    container.querySelectorAll('.btn-cancel').forEach(btn => btn.addEventListener('click', e => { e.stopPropagation(); editingId = null; isStudentView ? renderAchievements(activeStudentId) : renderTemplatesView(); }));
-    container.querySelectorAll('.btn-assign').forEach(btn => btn.addEventListener('click', e => { e.stopPropagation(); assignTemplate(parseInt(btn.dataset.id)); }));
+    container.querySelectorAll('.btn-edit').forEach(btn => btn.addEventListener('click', e => {
+      e.stopPropagation();
+      editingId = parseInt(btn.dataset.id);
+      if (isStudentView) renderAchievements(activeStudentId);
+      else renderTemplatesView();
+    }));
+
+    container.querySelectorAll('.btn-delete').forEach(btn => btn.addEventListener('click', e => {
+      e.stopPropagation();
+      deleteItem(parseInt(btn.dataset.id), !isStudentView);
+    }));
+
+    container.querySelectorAll('.btn-save').forEach(btn => btn.addEventListener('click', e => {
+      e.stopPropagation();
+      saveEdit(parseInt(btn.dataset.id), !isStudentView);
+    }));
+
+    container.querySelectorAll('.btn-cancel').forEach(btn => btn.addEventListener('click', e => {
+      e.stopPropagation();
+      editingId = null;
+      if (isStudentView) renderAchievements(activeStudentId);
+      else renderTemplatesView();
+    }));
+
+    container.querySelectorAll('.btn-assign').forEach(btn => btn.addEventListener('click', e => {
+      e.stopPropagation();
+      assignTemplate(parseInt(btn.dataset.id));
+    }));
   } else if (currentRole === 'student') {
-    container.querySelectorAll('.btn-request').forEach(btn => btn.addEventListener('click', e => { e.stopPropagation(); requestAchievement(parseInt(btn.dataset.id)); }));
+    container.querySelectorAll('.btn-request').forEach(btn => btn.addEventListener('click', e => {
+      e.stopPropagation();
+      requestAchievement(parseInt(btn.dataset.id));
+    }));
   }
 }
 
@@ -458,6 +549,7 @@ function renderAchievements(studentId) {
 function renderRequests() {
   const container = document.getElementById('requests-container');
   if (!container) return;
+
   const pendingRequests = cachedRequests.filter(r => r.status === 'pending');
 
   if (pendingRequests.length === 0) {
@@ -476,6 +568,7 @@ function renderRequests() {
     const card = document.createElement('div');
     card.classList.add('achievement-card');
     card.classList.add('request-card');
+
     const avatarSrc = student.avatar ? student.avatar : 'avatar-default.jpg';
 
     card.innerHTML = `
@@ -490,16 +583,22 @@ function renderRequests() {
           <button class="btn-grant" data-request-id="${request.id}" data-student-id="${student.id}" data-template-id="${template.id}">✓ Выдать</button>
           <button class="btn-reject" data-request-id="${request.id}">✕ Отклонить</button>
         </div>
-      </div>`;
+      </div>
+    `;
     container.appendChild(card);
   });
 
   container.querySelectorAll('.btn-grant').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      grantAchievement(btn.dataset.requestId, parseInt(btn.dataset.studentId), parseInt(btn.dataset.templateId));
+      grantAchievement(
+        btn.dataset.requestId,
+        parseInt(btn.dataset.studentId),
+        parseInt(btn.dataset.templateId)
+      );
     });
   });
+
   container.querySelectorAll('.btn-reject').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -509,13 +608,17 @@ function renderRequests() {
 }
 
 // ============================================
-// 14. ДЕЙСТВИЯ С ЗАПРОСАМИ
+// 14. ВЫДАТЬ ДОСТИЖЕНИЕ ПО ЗАПРОСУ
 // ============================================
 async function grantAchievement(requestId, studentIdToGrant, templateId) {
   const request = cachedRequests.find(r => r.id === requestId);
+  if (!request) return;
+
   const template = cachedTemplates.find(t => t.id === templateId);
+  if (!template) return;
+
   const student = cachedStudents.find(s => s.id === studentIdToGrant);
-  if (!request || !template || !student) return;
+  if (!student) return;
 
   const newAchievementRef = push(ref(db, 'achievements'));
   await set(newAchievementRef, {
@@ -526,6 +629,7 @@ async function grantAchievement(requestId, studentIdToGrant, templateId) {
     background: template.background,
     category: template.category
   });
+
   await remove(ref(db, `requests/${requestId}`));
   alert(`✅ Достижение "${template.title}" выдано студенту ${student.name}!`);
 }
@@ -536,17 +640,30 @@ async function rejectRequest(requestId) {
 }
 
 // ============================================
-// 15. ЗАПРОС ДОСТИЖЕНИЯ (СТУДЕНТ)
+// 15. ЗАПРОС ДОСТИЖЕНИЯ (студент)
 // ============================================
 async function requestAchievement(templateId) {
   const template = cachedTemplates.find(t => t.id === templateId);
   if (!template) return;
 
-  const existingRequest = cachedRequests.find(r => r.studentId == studentId && r.templateId === templateId && r.status === 'pending');
-  if (existingRequest) { alert('⚠️ Вы уже отправляли запрос на это достижение!'); return; }
+  const existingRequest = cachedRequests.find(r =>
+    r.studentId == studentId &&
+    r.templateId === templateId &&
+    r.status === 'pending'
+  );
+  if (existingRequest) {
+    alert('️ Вы уже отправляли запрос на это достижение!');
+    return;
+  }
 
-  const alreadyHas = cachedAchievements.find(a => a.studentId == studentId && a.title === template.title);
-  if (alreadyHas) { alert('⚠️ У вас уже есть это достижение!'); return; }
+  const alreadyHas = cachedAchievements.find(a =>
+    a.studentId == studentId &&
+    a.title === template.title
+  );
+  if (alreadyHas) {
+    alert('⚠️ У вас уже есть это достижение!');
+    return;
+  }
 
   const newRequestRef = push(ref(db, 'requests'));
   await set(newRequestRef, {
@@ -556,11 +673,12 @@ async function requestAchievement(templateId) {
     status: 'pending',
     date: new Date().toLocaleString('ru-RU')
   });
+
   alert(`✅ Запрос на достижение "${template.title}" отправлен администратору!`);
 }
 
 // ============================================
-// 16. РЕНДЕР ПРОФИЛЯ (С ДИНАМИЧЕСКОЙ ДИАГРАММОЙ И РЕДАКТИРОВАНИЕМ)
+// 16. РЕНДЕР ПРОФИЛЯ
 // ============================================
 function renderProfile() {
   const container = document.getElementById('profile-content');
@@ -582,42 +700,65 @@ function renderProfile() {
   const avatarSrc = student.avatar ? student.avatar : 'avatar-default.jpg';
   const studentAch = cachedAchievements.filter(a => a.studentId == targetId);
 
-  // 🔥 Динамические категории для диаграммы
   const allCategories = cachedCategories || [];
   const radarCategories = allCategories.map(cat => {
-    let short = cat.title.toUpperCase().replace('ДОСТИЖЕНИЯ ПО ', '').replace('ДОСТИЖЕНИЯ ', '');
+    let short = cat.title.toUpperCase();
+    short = short.replace('ДОСТИЖЕНИЯ ПО ', '').replace('ДОСТИЖЕНИЯ ', '');
     if (short.length > 8) short = short.substring(0, 6);
     return { id: cat.id, short: short, title: cat.title };
   });
 
   const radarData = radarCategories.map(cat => {
-    const templateTitles = cachedTemplates.filter(t => t.category === cat.id).map(t => t.title.toLowerCase().trim());
-    const personalTitlesInCat = studentAch.filter(a => a.category === cat.id && !templateTitles.includes(a.title.toLowerCase().trim())).map(a => a.title.toLowerCase().trim());
+    const templateTitles = cachedTemplates
+      .filter(t => t.category === cat.id)
+      .map(t => t.title.toLowerCase().trim());
+
+    const personalTitlesInCat = studentAch
+      .filter(a => a.category === cat.id && !templateTitles.includes(a.title.toLowerCase().trim()))
+      .map(a => a.title.toLowerCase().trim());
     const uniquePersonalTitles = [...new Set(personalTitlesInCat)];
+
     const totalInCategory = templateTitles.length + uniquePersonalTitles.length;
     const earnedInCategory = studentAch.filter(a => a.category === cat.id).length;
+
     const percent = totalInCategory > 0 ? earnedInCategory / totalInCategory : 0;
     return { ...cat, total: totalInCategory, earned: earnedInCategory, percent: Math.min(percent, 1) };
   });
 
-  const svgWidth = 300, svgHeight = 250, cx = svgWidth / 2, cy = svgHeight / 2 + 10, radius = 100, axes = radarData.length;
+  const svgWidth = 300;
+  const svgHeight = 250;
+  const cx = svgWidth / 2;
+  const cy = svgHeight / 2 + 10;
+  const radius = 100;
+  const axes = radarData.length;
 
   function getPoint(axisIndex, value) {
     const angle = -Math.PI / 2 + (2 * Math.PI / axes) * axisIndex;
-    return { x: cx + radius * value * Math.cos(angle), y: cy + radius * value * Math.sin(angle) };
+    return {
+      x: cx + radius * value * Math.cos(angle),
+      y: cy + radius * value * Math.sin(angle)
+    };
   }
 
-  let gridSvg = '', axesSvg = '', dataPoints = [], dataDots = '';
+  let gridSvg = '';
   for (let level = 1; level <= 4; level++) {
     const v = level / 4;
     let points = [];
-    for (let i = 0; i < axes; i++) { const p = getPoint(i, v); points.push(`${p.x},${p.y}`); }
+    for (let i = 0; i < axes; i++) {
+      const p = getPoint(i, v);
+      points.push(`${p.x},${p.y}`);
+    }
     gridSvg += `<polygon points="${points.join(' ')}" fill="none" stroke="#3d3d5c" stroke-width="1.5" stroke-dasharray="4,3"/>`;
   }
+
+  let axesSvg = '';
   for (let i = 0; i < axes; i++) {
     const p = getPoint(i, 1);
     axesSvg += `<line x1="${cx}" y1="${cy}" x2="${p.x}" y2="${p.y}" stroke="#3d3d5c" stroke-width="1.5" stroke-dasharray="4,3"/>`;
   }
+
+  let dataPoints = [];
+  let dataDots = '';
   radarData.forEach((cat, i) => {
     const p = getPoint(i, cat.percent);
     dataPoints.push(`${p.x},${p.y}`);
@@ -625,62 +766,115 @@ function renderProfile() {
   });
 
   const dataPolygon = `<polygon points="${dataPoints.join(' ')}" fill="rgba(76, 175, 80, 0.35)" stroke="#4caf50" stroke-width="3"/>`;
+
   let labelsSvg = '';
   radarData.forEach((cat, i) => {
     const angle = -Math.PI / 2 + (2 * Math.PI / axes) * i;
     const labelR = radius + 10;
-    const lx = cx + labelR * Math.cos(angle), ly = cy + labelR * Math.sin(angle);
+    const lx = cx + labelR * Math.cos(angle);
+    const ly = cy + labelR * Math.sin(angle);
     let anchor = 'middle';
     if (Math.cos(angle) > 0.3) anchor = 'start';
     else if (Math.cos(angle) < -0.3) anchor = 'end';
     let dy = 0;
-    if (Math.sin(angle) < -0.5) dy = -5; else if (Math.sin(angle) > 0.5) dy = 10;
+    if (Math.sin(angle) < -0.5) dy = -5;
+    else if (Math.sin(angle) > 0.5) dy = 10;
+
     labelsSvg += `<text x="${lx}" y="${ly + dy - 4}" text-anchor="${anchor}" fill="#ffd700" font-family="'Press Start 2P', cursive" font-size="7" style="text-shadow: 1px 1px 0 #000;">${cat.short}</text>`;
     labelsSvg += `<text x="${lx}" y="${ly + dy + 6}" text-anchor="${anchor}" fill="#ffd700" font-family="'Press Start 2P', cursive" font-size="7" style="text-shadow: 1px 1px 0 #000;">(${cat.earned}/${cat.total})</text>`;
   });
 
   const radarSvg = `<svg width="${svgWidth}" height="${svgHeight}" viewBox="0 0 ${svgWidth} ${svgHeight}" style="display:block; margin: 0 auto;">${gridSvg}${axesSvg}${dataPolygon}${dataDots}${labelsSvg}</svg>`;
+
   const canEdit = (currentRole === 'admin') || (currentRole === 'student' && student.id == studentId);
 
-  let leftColumn = `<div style="text-align:center;"><img src="${avatarSrc}" alt="Аватар" style="width:120px; height:120px; border-radius:50%; border:4px solid #ffd700; object-fit:cover; image-rendering:pixelated; background:#1a1a2e; cursor:pointer;" title="Нажми, чтобы изменить"><h2 style="color:#ffd700; text-shadow:2px 2px 0 #000; margin-top:15px; font-size:18px;">${student.name}</h2><p style="color:#888; font-size:11px; margin-top:10px; line-height:1.6;">${student.bio || 'Нет описания'}</p>`;
+  let leftColumn = `
+    <div style="text-align:center;">
+      <img src="${avatarSrc}" alt="Аватар" style="width:120px; height:120px; border-radius:50%; border:4px solid #ffd700; object-fit:cover; image-rendering:pixelated; background:#1a1a2e; cursor:pointer;" title="Нажми, чтобы изменить">
+      <h2 style="color:#ffd700; text-shadow:2px 2px 0 #000; margin-top:15px; font-size:18px;">${student.name}</h2>
+      <p style="color:#888; font-size:11px; margin-top:10px; line-height:1.6;">${student.bio || 'Нет описания'}</p>
+  `;
 
-  // 🔥 Блок с логином/паролем + редактирование — ТОЛЬКО для админа
   if (currentRole === 'admin') {
     leftColumn += `
       <div style="margin-top:15px; display:flex; align-items:center; justify-content:center; gap:8px;">
         <button onclick="toggleEditCredentials(${student.id})" id="edit-creds-btn" title="Редактировать логин и пароль" style="background:#2d2d4a; border:2px solid #3d3d5c; border-radius:6px; padding:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; width:36px; height:36px; transition:all 0.2s;">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#ffd700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px; height:18px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="#ffd700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px; height:18px;">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
         </button>
         <div id="creds-display" style="padding:10px; background:#1a1a2e; border:2px solid #3d3d5c; border-radius:6px; text-align:left; min-width:180px;">
-          <div style="font-size:9px; color:#ffd700; margin-bottom:5px; text-shadow:1px 1px 0 #000;"><span style="color:#888;">Логин:</span> <span class="secret-data hidden-secret" id="profile-login" data-original="${student.login || '—'}">${student.login || '—'}</span></div>
-          <div style="font-size:9px; color:#ffd700; text-shadow:1px 1px 0 #000;"><span style="color:#888;">Пароль:</span> <span class="secret-data hidden-secret" id="profile-password" data-original="${student.password || '—'}">${student.password || '—'}</span></div>
+          <div style="font-size:9px; color:#ffd700; margin-bottom:5px; text-shadow:1px 1px 0 #000;">
+            <span style="color:#888;">Логин:</span>
+            <span class="secret-data hidden-secret" id="profile-login" data-original="${student.login || '—'}">${student.login || '—'}</span>
+          </div>
+          <div style="font-size:9px; color:#ffd700; text-shadow:1px 1px 0 #000;">
+            <span style="color:#888;">Пароль:</span>
+            <span class="secret-data hidden-secret" id="profile-password" data-original="${student.password || '—'}">${student.password || '—'}</span>
+          </div>
         </div>
         <div id="creds-edit" style="display:none; padding:10px; background:#1a1a2e; border:2px solid #ffd700; border-radius:6px; text-align:left; min-width:180px;">
-          <div style="font-size:9px; color:#ffd700; margin-bottom:5px; text-shadow:1px 1px 0 #000;"><span style="color:#888;">Логин:</span> <input type="text" id="edit-login-input" value="${student.login || ''}" style="width:100px; padding:3px 5px; font-family:'Press Start 2P', cursive; font-size:8px; background:#2d2d4a; border:1px solid #5a5a8a; color:#ffd700; border-radius:3px; outline:none;"></div>
-          <div style="font-size:9px; color:#ffd700; text-shadow:1px 1px 0 #000;"><span style="color:#888;">Пароль:</span> <input type="text" id="edit-password-input" value="${student.password || ''}" style="width:100px; padding:3px 5px; font-family:'Press Start 2P', cursive; font-size:8px; background:#2d2d4a; border:1px solid #5a5a8a; color:#ffd700; border-radius:3px; outline:none;"></div>
+          <div style="font-size:9px; color:#ffd700; margin-bottom:5px; text-shadow:1px 1px 0 #000;">
+            <span style="color:#888;">Логин:</span>
+            <input type="text" id="edit-login-input" value="${student.login || ''}" style="width:100px; padding:3px 5px; font-family:'Press Start 2P', cursive; font-size:8px; background:#2d2d4a; border:1px solid #5a5a8a; color:#ffd700; border-radius:3px; outline:none;">
+          </div>
+          <div style="font-size:9px; color:#ffd700; text-shadow:1px 1px 0 #000;">
+            <span style="color:#888;">Пароль:</span>
+            <input type="text" id="edit-password-input" value="${student.password || ''}" style="width:100px; padding:3px 5px; font-family:'Press Start 2P', cursive; font-size:8px; background:#2d2d4a; border:1px solid #5a5a8a; color:#ffd700; border-radius:3px; outline:none;">
+          </div>
         </div>
         <div id="creds-actions" style="display:none; gap:4px;">
           <button onclick="saveCredentials(${student.id})" title="Сохранить" style="background:#4caf50; border:2px solid #3d8a40; border-radius:6px; padding:8px; cursor:pointer; color:white; font-family:'Press Start 2P', cursive; font-size:10px; width:36px; height:36px;">✓</button>
           <button onclick="cancelEditCredentials()" title="Отмена" style="background:#757575; border:2px solid #5a5a5a; border-radius:6px; padding:8px; cursor:pointer; color:white; font-family:'Press Start 2P', cursive; font-size:10px; width:36px; height:36px;">✕</button>
         </div>
         <button onclick="toggleSecret()" id="eye-btn" title="Показать/скрыть" style="background:#2d2d4a; border:2px solid #3d3d5c; border-radius:6px; padding:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; width:36px; height:36px; transition:all 0.2s;">
-          <svg id="eye-icon-open" viewBox="0 0 24 24" fill="none" stroke="#ffd700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px; height:18px; display:none;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-          <svg id="eye-icon-closed" viewBox="0 0 24 24" fill="none" stroke="#ffd700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px; height:18px;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          <svg id="eye-icon-open" viewBox="0 0 24 24" fill="none" stroke="#ffd700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px; height:18px; display:none;">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+          <svg id="eye-icon-closed" viewBox="0 0 24 24" fill="none" stroke="#ffd700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px; height:18px;">
+            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+            <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+            <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/>
+            <line x1="1" y1="1" x2="23" y2="23"/>
+          </svg>
         </button>
-      </div>`;
+      </div>
+    `;
   }
+
   leftColumn += `</div>`;
 
   if (canEdit) {
-    leftColumn += `<div style="display:flex; gap:10px; justify-content:center; margin-top:20px;"><button onclick="editProfileAvatar(${student.id})" style="background:#5a5a8a; color:white; border:2px solid #3d3d5c; padding:8px 16px; border-radius:4px; cursor:pointer; font-family:'Press Start 2P', cursive; font-size:9px;">📷 Изменить фото</button><button onclick="editProfileBio(${student.id})" style="background:#5a5a8a; color:white; border:2px solid #3d3d5c; padding:8px 16px; border-radius:4px; cursor:pointer; font-family:'Press Start 2P', cursive; font-size:9px;">✏️ Изменить описание</button></div>`;
+    leftColumn += `
+      <div style="display:flex; gap:10px; justify-content:center; margin-top:20px;">
+        <button onclick="editProfileAvatar(${student.id})" style="background:#5a5a8a; color:white; border:2px solid #3d3d5c; padding:8px 16px; border-radius:4px; cursor:pointer; font-family:'Press Start 2P', cursive; font-size:9px;"> Изменить фото</button>
+        <button onclick="editProfileBio(${student.id})" style="background:#5a5a8a; color:white; border:2px solid #3d3d5c; padding:8px 16px; border-radius:4px; cursor:pointer; font-family:'Press Start 2P', cursive; font-size:9px;">✏️ Изменить описание</button>
+      </div>
+    `;
   }
 
-  const rightColumn = `<div style="background:#1a1a2e; border:3px solid #3d3d5c; border-radius:8px; padding:15px;"><h3 style="color:#ffd700; text-shadow:2px 2px 0 #000; font-size:12px; text-align:center; margin:0 0 10px 0; letter-spacing:2px;">SKILL WEB</h3>${radarSvg}</div>`;
-  container.innerHTML = `<div style="display:flex; gap:25px; align-items:flex-start; width:100%;"><div style="flex:1; min-width:300px;">${leftColumn}</div><div style="flex:1.5; min-width:400px;">${rightColumn}</div></div>`;
+  const rightColumn = `
+    <div style="background:#1a1a2e; border:3px solid #3d3d5c; border-radius:8px; padding:15px;">
+      <h3 style="color:#ffd700; text-shadow:2px 2px 0 #000; font-size:12px; text-align:center; margin:0 0 10px 0; letter-spacing:2px;">SKILL WEB</h3>
+      ${radarSvg}
+    </div>
+  `;
+
+  container.innerHTML = `
+    <div style="display:flex; gap:25px; align-items:flex-start; width:100%;">
+      <div style="flex:1; min-width:300px;">${leftColumn}</div>
+      <div style="flex:1.5; min-width:400px;">${rightColumn}</div>
+    </div>
+  `;
 
   setTimeout(() => {
     const secrets = document.querySelectorAll('.secret-data');
-    secrets.forEach(el => { el.dataset.original = el.textContent; el.classList.add('hidden-secret'); });
+    secrets.forEach(el => {
+      el.dataset.original = el.textContent;
+      el.classList.add('hidden-secret');
+    });
     const eyeOpen = document.getElementById('eye-icon-open');
     const eyeClosed = document.getElementById('eye-icon-closed');
     if (eyeOpen) eyeOpen.style.display = 'none';
@@ -696,14 +890,29 @@ window.toggleSecret = function() {
   const eyeOpen = document.getElementById('eye-icon-open');
   const eyeClosed = document.getElementById('eye-icon-closed');
   const eyeBtn = document.getElementById('eye-btn');
+
   if (secrets.length === 0) return;
+
   const isHidden = secrets[0].classList.contains('hidden-secret');
+
   secrets.forEach(el => {
-    if (isHidden) { el.classList.remove('hidden-secret'); el.textContent = el.dataset.original; }
-    else { el.dataset.original = el.textContent; el.classList.add('hidden-secret'); }
+    if (isHidden) {
+      el.classList.remove('hidden-secret');
+      el.textContent = el.dataset.original;
+    } else {
+      el.dataset.original = el.textContent;
+      el.classList.add('hidden-secret');
+    }
   });
-  if (isHidden) { eyeOpen.style.display = 'block'; eyeClosed.style.display = 'none'; }
-  else { eyeOpen.style.display = 'none'; eyeClosed.style.display = 'block'; }
+
+  if (isHidden) {
+    eyeOpen.style.display = 'block';
+    eyeClosed.style.display = 'none';
+  } else {
+    eyeOpen.style.display = 'none';
+    eyeClosed.style.display = 'block';
+  }
+
   eyeBtn.style.borderColor = isHidden ? '#3d3d5c' : '#ffd700';
 };
 
@@ -713,7 +922,10 @@ window.toggleEditCredentials = function(studentId) {
   document.getElementById('creds-actions').style.display = 'flex';
   document.getElementById('edit-creds-btn').style.display = 'none';
   document.getElementById('eye-btn').style.display = 'none';
-  setTimeout(() => { const loginInput = document.getElementById('edit-login-input'); if (loginInput) loginInput.focus(); }, 50);
+  setTimeout(() => {
+    const loginInput = document.getElementById('edit-login-input');
+    if (loginInput) loginInput.focus();
+  }, 50);
 };
 
 window.cancelEditCredentials = function() {
@@ -727,12 +939,15 @@ window.cancelEditCredentials = function() {
 window.saveCredentials = async function(studentId) {
   const newLogin = document.getElementById('edit-login-input').value.trim();
   const newPassword = document.getElementById('edit-password-input').value.trim();
-  if (!newLogin) return alert('⚠️ Логин не может быть пустым!');
-  if (!newPassword) return alert('⚠️ Пароль не может быть пустым!');
+
+  if (!newLogin) return alert('️ Логин не может быть пустым!');
+  if (!newPassword) return alert('️ Пароль не может быть пустым!');
+
   const loginTaken = cachedStudents.some(s => s.login === newLogin && s.id !== studentId);
   if (loginTaken) return alert('⚠️ Этот логин уже занят другим студентом!');
-  
+
   await update(ref(db, `students/${studentId}`), { login: newLogin, password: newPassword });
+
   alert('✅ Логин и пароль успешно обновлены!');
   cancelEditCredentials();
 };
@@ -743,7 +958,10 @@ window.editProfileAvatar = async function(studentId) {
   const modal = document.getElementById('avatar-modal');
   const grid = document.getElementById('avatar-grid');
   const customInput = document.getElementById('custom-avatar-input');
-  grid.innerHTML = ''; customInput.value = '';
+
+  grid.innerHTML = '';
+  customInput.value = '';
+
   availableAvatars.forEach(avatar => {
     const option = document.createElement('div');
     option.className = 'avatar-option';
@@ -756,18 +974,21 @@ window.editProfileAvatar = async function(studentId) {
     });
     grid.appendChild(option);
   });
+
   customInput.oninput = () => {
     if (customInput.value.trim()) {
       grid.querySelectorAll('.avatar-option').forEach(el => el.classList.remove('selected'));
       selectedAvatarPath = customInput.value.trim();
     }
   };
+
   document.getElementById('avatar-save-btn').onclick = async () => {
     const finalPath = selectedAvatarPath || customInput.value.trim();
     if (!finalPath) return alert('Выберите аватарку или вставьте ссылку!');
     await update(ref(db, `students/${currentEditStudentId}`), { avatar: finalPath });
     modal.classList.add('hidden');
   };
+
   document.getElementById('avatar-cancel-btn').onclick = () => modal.classList.add('hidden');
   modal.classList.remove('hidden');
 };
@@ -775,8 +996,10 @@ window.editProfileAvatar = async function(studentId) {
 window.editProfileBio = async function(studentId) {
   const student = cachedStudents.find(s => s.id == studentId);
   if (!student) return;
+
   const newBio = prompt('Введите новое описание профиля:', student.bio || '');
   if (newBio === null) return;
+
   await update(ref(db, `students/${studentId}`), { bio: newBio.trim() });
 };
 
@@ -785,83 +1008,165 @@ window.editProfileBio = async function(studentId) {
 // ============================================
 function showCustomConfirm(message, onConfirm) {
   const modal = document.getElementById('custom-confirm-modal');
-  document.getElementById('modal-message').textContent = message;
+  const msgEl = document.getElementById('modal-message');
+  const confirmBtn = document.getElementById('modal-confirm-btn');
+  const cancelBtn = document.getElementById('modal-cancel-btn');
+
+  msgEl.textContent = message;
   modal.classList.remove('hidden');
-  document.getElementById('modal-confirm-btn').onclick = () => { modal.classList.add('hidden'); if (onConfirm) onConfirm(); };
-  document.getElementById('modal-cancel-btn').onclick = () => modal.classList.add('hidden');
+
+  confirmBtn.onclick = () => {
+    modal.classList.add('hidden');
+    if (onConfirm) onConfirm();
+  };
+
+  cancelBtn.onclick = () => modal.classList.add('hidden');
 }
 
 // ============================================
 // 19. ПРИСВОЕНИЕ ШАБЛОНА СТУДЕНТУ
 // ============================================
 async function assignTemplate(templateId) {
-  if (!activeStudentId) { alert('⚠️ Сначала выберите студента из списка слева!'); return; }
+  if (!activeStudentId) {
+    alert('⚠️ Сначала выберите студента из списка слева!');
+    return;
+  }
+
   const template = cachedTemplates.find(t => t.id === templateId);
+  if (!template) return;
+
   const targetStudent = cachedStudents.find(s => s.id == activeStudentId);
-  if (!template || !targetStudent) return;
-  if (cachedAchievements.find(a => a.studentId === targetStudent.id && a.title === template.title)) {
+  if (!targetStudent) return;
+
+  const alreadyHas = cachedAchievements.find(a =>
+    a.studentId === targetStudent.id &&
+    a.title === template.title
+  );
+
+  if (alreadyHas) {
     alert(`⚠️ У студента "${targetStudent.name}" уже есть достижение "${template.title}"!\n\nПовторное присвоение невозможно.`);
     return;
   }
-  showCustomConfirm(`Вы присваиваете достижение:\n\n«${template.title}»\n\nстуденту:\n${targetStudent.name}\n\nПродолжить?`, async () => {
+
+  const confirmMsg = `Вы присваиваете достижение:\n\n«${template.title}»\n\nстуденту:\n${targetStudent.name}\n\nПродолжить?`;
+
+  showCustomConfirm(confirmMsg, async () => {
     const newAchievementRef = push(ref(db, 'achievements'));
-    await set(newAchievementRef, { id: newAchievementRef.key, studentId: targetStudent.id, title: template.title, desc: template.desc, background: template.background, category: template.category });
+    await set(newAchievementRef, {
+      id: newAchievementRef.key,
+      studentId: targetStudent.id,
+      title: template.title,
+      desc: template.desc,
+      background: template.background,
+      category: template.category
+    });
     alert(`✅ Достижение "${template.title}" успешно присвоено!\nСтудент: ${targetStudent.name}`);
     if (currentTab === 'profile') renderProfile();
   });
 }
 
 // ============================================
-// 20-28. УПРАВЛЕНИЕ ДАННЫМИ (FIREBASE)
+// 20. ДОБАВЛЕНИЕ СТУДЕНТА
 // ============================================
 document.getElementById('add-student-btn')?.addEventListener('click', () => {
   const modal = document.getElementById('add-student-modal');
-  document.getElementById('new-student-name').value = '';
-  document.getElementById('new-student-login').value = '';
-  document.getElementById('new-student-password').value = '';
+  const nameInput = document.getElementById('new-student-name');
+  const loginInput = document.getElementById('new-student-login');
+  const passwordInput = document.getElementById('new-student-password');
+
+  nameInput.value = '';
+  loginInput.value = '';
+  passwordInput.value = '';
   modal.classList.remove('hidden');
+
   document.getElementById('save-new-student').onclick = async () => {
-    const name = document.getElementById('new-student-name').value.trim();
-    const login = document.getElementById('new-student-login').value.trim();
-    const password = document.getElementById('new-student-password').value.trim();
-    if (!name || !login || !password) return alert('Все поля обязательны!');
-    if (cachedStudents.some(s => s.login === login)) return alert('Этот логин уже занят!');
+    const name = nameInput.value.trim();
+    const login = loginInput.value.trim();
+    const password = passwordInput.value.trim();
+
+    if (!name) return alert('ФИО обязательно!');
+    if (!login) return alert('Логин обязателен!');
+    if (!password) return alert('Пароль обязателен!');
+
+    const loginTaken = cachedStudents.some(s => s.login === login);
+    if (loginTaken) return alert('Этот логин уже занят!');
+
     const newId = cachedStudents.length > 0 ? Math.max(...cachedStudents.map(s => s.id)) + 1 : 1;
-    await set(ref(db, `students/${newId}`), { id: newId, name, login, password, avatar: "", bio: "", archived: false });
+
+    await set(ref(db, `students/${newId}`), {
+      id: newId,
+      name,
+      login,
+      password,
+      avatar: "",
+      bio: "",
+      archived: false
+    });
+
     modal.classList.add('hidden');
   };
-  document.getElementById('cancel-new-student').onclick = () => modal.classList.add('hidden');
+
+  document.getElementById('cancel-new-student').onclick = () => {
+    modal.classList.add('hidden');
+  };
 });
 
+// ============================================
+// 21. УДАЛЕНИЕ СТУДЕНТА
+// ============================================
 document.getElementById('delete-student-btn')?.addEventListener('click', async () => {
   if (!activeStudentId) return alert('Выберите студента!');
+
   const student = cachedStudents.find(s => s.id === activeStudentId);
   if (!confirm(`Удалить "${student.name}" и все его достижения?`)) return;
+
   await remove(ref(db, `students/${activeStudentId}`));
+
   const studentAchievements = cachedAchievements.filter(a => a.studentId === activeStudentId);
-  for (const ach of studentAchievements) await remove(ref(db, `achievements/${ach.id}`));
-  activeStudentId = null; editingId = null;
+  for (const ach of studentAchievements) {
+    await remove(ref(db, `achievements/${ach.id}`));
+  }
+
+  activeStudentId = null;
+  editingId = null;
   document.getElementById('achievements-container').innerHTML = '<p class="placeholder">Выберите студента...</p>';
 });
 
+// ============================================
+// 22. АРХИВАЦИЯ АКТИВНОГО СТУДЕНТА
+// ============================================
 document.getElementById('archive-student-btn')?.addEventListener('click', async () => {
   if (!activeStudentId) return alert('⚠️ Сначала выберите студента из списка слева!');
+
   const student = cachedStudents.find(s => s.id === activeStudentId);
   if (!student) return;
+
   if (!confirm(`Отправить "${student.name}" в архив?\n\nЕго достижения сохранятся, но он исчезнет из основного списка.`)) return;
+
   await update(ref(db, `students/${student.id}`), { archived: true });
-  activeStudentId = null; editingId = null;
+
+  activeStudentId = null;
+  editingId = null;
   document.getElementById('achievements-container').innerHTML = '<p class="placeholder">Студент отправлен в архив.</p>';
 });
 
+// ============================================
+// 23. ДОБАВЛЕНИЕ ДОСТИЖЕНИЯ
+// ============================================
 document.getElementById('add-achievement-btn')?.addEventListener('click', () => {
   if (currentTab === 'student' && !activeStudentId) return alert('Выберите студента!');
+
   const modal = document.getElementById('add-achievement-modal');
-  document.getElementById('new-ach-title').value = '';
-  document.getElementById('new-ach-desc').value = '';
-  document.getElementById('new-ach-bg').value = '';
+  const titleInput = document.getElementById('new-ach-title');
+  const descInput = document.getElementById('new-ach-desc');
+  const bgInput = document.getElementById('new-ach-bg');
   const categorySelector = document.getElementById('category-selector');
+
+  titleInput.value = '';
+  descInput.value = '';
+  bgInput.value = '';
   categorySelector.innerHTML = '';
+
   let selectedCategory = '';
   cachedCategories.forEach(cat => {
     const option = document.createElement('div');
@@ -874,67 +1179,123 @@ document.getElementById('add-achievement-btn')?.addEventListener('click', () => 
     });
     categorySelector.appendChild(option);
   });
+
   modal.classList.remove('hidden');
+
   document.getElementById('save-new-ach').onclick = async () => {
-    const title = document.getElementById('new-ach-title').value.trim();
+    const title = titleInput.value.trim();
     if (!title) return alert('Название обязательно!');
     if (!selectedCategory) return alert('Выберите категорию!');
+
+    const desc = descInput.value.trim();
+    const bg = bgInput.value.trim();
+
     const newAchievementRef = push(ref(db, 'achievements'));
-    await set(newAchievementRef, { id: newAchievementRef.key, studentId: activeStudentId, title, desc: document.getElementById('new-ach-desc').value.trim(), background: document.getElementById('new-ach-bg').value.trim(), category: selectedCategory });
+    await set(newAchievementRef, {
+      id: newAchievementRef.key,
+      studentId: activeStudentId,
+      title,
+      desc,
+      background: bg,
+      category: selectedCategory
+    });
+
     modal.classList.add('hidden');
     if (currentTab === 'profile') renderProfile();
   };
+
   document.getElementById('cancel-new-ach').onclick = () => modal.classList.add('hidden');
 });
 
+// ============================================
+// 24. ДОБАВЛЕНИЕ ШАБЛОНА
+// ============================================
 if (addTemplateBtn) {
   addTemplateBtn.addEventListener('click', () => {
     if (currentTab === 'template' && !currentCategory) return alert('Сначала выберите категорию!');
+
     const modal = document.getElementById('add-template-modal');
-    document.getElementById('new-template-title').value = '';
-    document.getElementById('new-template-desc').value = '';
-    document.getElementById('new-template-bg').value = '';
+    const titleInput = document.getElementById('new-template-title');
+    const descInput = document.getElementById('new-template-desc');
+    const bgInput = document.getElementById('new-template-bg');
+
+    titleInput.value = '';
+    descInput.value = '';
+    bgInput.value = '';
     modal.classList.remove('hidden');
+
     document.getElementById('save-new-template').onclick = async () => {
-      const title = document.getElementById('new-template-title').value.trim();
+      const title = titleInput.value.trim();
       if (!title) return alert('Название обязательно!');
+
+      const desc = descInput.value.trim();
+      const bg = bgInput.value.trim();
+
       const newTemplateRef = push(ref(db, 'templates'));
-      await set(newTemplateRef, { id: newTemplateRef.key, category: currentCategory, title, desc: document.getElementById('new-template-desc').value.trim(), background: document.getElementById('new-template-bg').value.trim() });
+      await set(newTemplateRef, {
+        id: newTemplateRef.key,
+        category: currentCategory,
+        title,
+        desc,
+        background: bg
+      });
+
       modal.classList.add('hidden');
     };
-    document.getElementById('cancel-new-template').onclick = () => modal.classList.add('hidden');
+
+    document.getElementById('cancel-new-template').onclick = () => {
+      modal.classList.add('hidden');
+    };
   });
 }
 
+// ============================================
+// 25. СОХРАНЕНИЕ РЕДАКТИРОВАНИЯ
+// ============================================
 async function saveEdit(id, isTemplate) {
   const card = document.querySelector('.achievement-card.editing');
   const title = card.querySelector('.edit-title').value.trim();
-  if (!title) return alert('Название обязательно!');
-  const updateData = {
-    title,
-    desc: card.querySelector('.edit-desc').value.trim(),
-    background: card.querySelector('.edit-background').value.trim()
-  };
+  const desc = card.querySelector('.edit-desc').value.trim();
+  const bg = card.querySelector('.edit-background').value.trim();
   const categorySelect = card.querySelector('.edit-category');
-  if (categorySelect && categorySelect.value) updateData.category = categorySelect.value;
+  const newCategory = categorySelect ? categorySelect.value : null;
 
-  await update(ref(db, isTemplate ? `templates/${id}` : `achievements/${id}`), updateData);
+  if (!title) return alert('Название обязательно!');
+
+  const path = isTemplate ? `templates/${id}` : `achievements/${id}`;
+  const updateData = { title, desc, background: bg };
+  if (newCategory) updateData.category = newCategory;
+
+  await update(ref(db, path), updateData);
+
   editingId = null;
-  isTemplate ? renderTemplatesView() : renderAchievements(activeStudentId);
+  if (isTemplate) renderTemplatesView();
+  else renderAchievements(activeStudentId);
   renderProfile();
 }
 
+// ============================================
+// 26. УДАЛЕНИЕ ДОСТИЖЕНИЯ/ШАБЛОНА
+// ============================================
 async function deleteItem(id, isTemplate) {
   if (!confirm('Удалить это достижение?')) return;
-  await remove(ref(db, isTemplate ? `templates/${id}` : `achievements/${id}`));
+
+  const path = isTemplate ? `templates/${id}` : `achievements/${id}`;
+  await remove(ref(db, path));
+
   if (editingId === id) editingId = null;
-  isTemplate ? renderTemplatesView() : renderAchievements(activeStudentId);
+  if (isTemplate) renderTemplatesView();
+  else renderAchievements(activeStudentId);
 }
 
+// ============================================
+// 27. КАТЕГОРИИ
+// ============================================
 async function addNewCategory() {
   const title = prompt('Название новой категории:');
   if (!title) return;
   const desc = prompt('Описание категории:') || '';
+
   const newId = title.toLowerCase().replace(/[^a-zа-я0-9]/g, '').substring(0, 10) + Date.now();
   await set(ref(db, `categories/${newId}`), { id: newId, title, desc });
 }
@@ -942,36 +1303,65 @@ async function addNewCategory() {
 async function editCategory(catId) {
   const cat = cachedCategories.find(c => c.id === catId);
   if (!cat) return;
+
   const newTitle = prompt('Новое название:', cat.title);
   if (!newTitle) return;
   const newDesc = prompt('Новое описание:', cat.desc);
+
   await update(ref(db, `categories/${catId}`), { title: newTitle, desc: newDesc || '' });
 }
 
 async function deleteCategory(catId) {
   if (!confirm('Удалить эту категорию и ВСЕ достижения в ней?')) return;
+
   await remove(ref(db, `categories/${catId}`));
+
   const templatesInCat = cachedTemplates.filter(t => t.category === catId);
-  for (const t of templatesInCat) await remove(ref(db, `templates/${t.id}`));
+  for (const t of templatesInCat) {
+    await remove(ref(db, `templates/${t.id}`));
+  }
+
   if (currentCategory === catId) currentCategory = null;
 }
 
 // ============================================
-// 29. РЕНДЕР АРХИВА
+// 28. РЕНДЕР АРХИВА
 // ============================================
 function renderArchived() {
   const container = document.getElementById('archived-container');
   if (!container) return;
+
   const archivedStudents = cachedStudents.filter(s => s.archived);
-  if (archivedStudents.length === 0) { container.innerHTML = '<p class="placeholder">Архив пуст.</p>'; return; }
-  container.innerHTML = ''; container.className = 'achievements-grid';
+
+  if (archivedStudents.length === 0) {
+    container.innerHTML = '<p class="placeholder">Архив пуст.</p>';
+    return;
+  }
+
+  container.innerHTML = '';
+  container.className = 'achievements-grid';
 
   archivedStudents.forEach(student => {
     const card = document.createElement('div');
     card.classList.add('achievement-card');
     const avatarSrc = student.avatar ? student.avatar : 'avatar-default.jpg';
     const studentAch = cachedAchievements.filter(a => a.studentId === student.id);
-    card.innerHTML = `<div class="mc-achievement" style="min-height:80px;"><img src="${avatarSrc}" class="achievement-icon"><div class="achievement-text"><h3>${student.name}</h3><p>Достижений: ${studentAch.length}</p></div>${currentRole === 'admin' ? `<div class="card-actions"><button class="btn-unarchive" data-id="${student.id}" title="Вернуть из архива">↩️</button><button class="btn-delete" data-id="${student.id}" title="Удалить навсегда">🗑️</button></div>` : ''}</div>`;
+
+    card.innerHTML = `
+      <div class="mc-achievement">
+        <img src="${avatarSrc}" class="achievement-icon">
+        <div class="achievement-text">
+          <h3>${student.name}</h3>
+          <p>Достижений: ${studentAch.length}</p>
+        </div>
+        ${currentRole === 'admin' ? `
+          <div class="card-actions">
+            <button class="btn-unarchive" data-id="${student.id}" title="Вернуть из архива">↩️</button>
+            <button class="btn-delete" data-id="${student.id}" title="Удалить навсегда">️</button>
+          </div>
+        ` : ''}
+      </div>
+    `;
     container.appendChild(card);
   });
 
@@ -979,38 +1369,52 @@ function renderArchived() {
     container.querySelectorAll('.btn-unarchive').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         e.stopPropagation();
-        await update(ref(db, `students/${parseInt(btn.dataset.id)}`), { archived: false });
+        const id = parseInt(btn.dataset.id);
+        await update(ref(db, `students/${id}`), { archived: false });
       });
     });
+
     container.querySelectorAll('.btn-delete').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         e.stopPropagation();
         const id = parseInt(btn.dataset.id);
         const student = cachedStudents.find(s => s.id === id);
         if (!confirm(`Удалить "${student.name}" НАВСЕГДА?\nВсе его достижения будут удалены безвозвратно!`)) return;
+
         await remove(ref(db, `students/${id}`));
+
         const studentAchievements = cachedAchievements.filter(a => a.studentId === id);
-        for (const ach of studentAchievements) await remove(ref(db, `achievements/${ach.id}`));
+        for (const ach of studentAchievements) {
+          await remove(ref(db, `achievements/${ach.id}`));
+        }
       });
     });
   }
 }
 
 // ============================================
-// 30. ЗАПУСК
+// 29. ЗАПУСК
 // ============================================
 async function startApp() {
   await initDatabase();
+
   await new Promise(resolve => {
     const unsub = onValue(ref(db, 'students'), (snapshot) => {
-      cachedStudents = Object.values(snapshot.val() || {});
+      const data = snapshot.val() || {};
+      cachedStudents = Object.values(data);
       unsub();
       resolve();
     }, { onlyOnce: true });
   });
+
   if (cachedStudents.length > 0) {
-    activeStudentId = (currentRole === 'student' && studentId) ? parseInt(studentId) : cachedStudents[0].id;
+    if (currentRole === 'student' && studentId) {
+      activeStudentId = parseInt(studentId);
+    } else {
+      activeStudentId = cachedStudents[0].id;
+    }
   }
+
   switchTab('student');
 }
 
