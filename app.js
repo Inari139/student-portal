@@ -265,12 +265,21 @@ if (currentRole === 'admin') {
   addTemplateBtn && addTemplateBtn.classList.remove('hidden');
   switchTab('student');
 } else if (currentRole === 'student') {
-  const myData = cachedStudents.find(s => s.id == studentId);
-  if (!myData) {
-    localStorage.removeItem('role');
-    localStorage.removeItem('studentId');
-    window.location.href = 'login.html';
-  } else {
+  // Ждём загрузки данных перед проверкой
+  const checkStudent = () => {
+    const myData = cachedStudents.find(s => s.id == studentId);
+    if (!myData) {
+      // Если данных ещё нет — ждём
+      if (cachedStudents.length === 0) {
+        setTimeout(checkStudent, 100);
+        return;
+      }
+      // Если данные есть, но студент не найден — редирект
+      localStorage.removeItem('role');
+      localStorage.removeItem('studentId');
+      window.location.href = 'login.html';
+      return;
+    }
     userStatus.textContent = myData.name;
     authBtn.textContent = 'Выйти';
     authBtn.onclick = () => {
@@ -285,7 +294,8 @@ if (currentRole === 'admin') {
     tabRequests && tabRequests.classList.add('hidden');
     activeStudentId = parseInt(studentId);
     switchTab('student');
-  }
+  };
+  checkStudent();
 } else {
   userStatus.textContent = 'Гость';
   authBtn.textContent = 'Войти';
