@@ -1,0 +1,120 @@
+/* === Minecraft-шрифт для всего === */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+/* Общие настройки фона (как в основном стиле) */
+body {
+    font-family: 'Press Start 2P', Arial, sans-serif;
+    background-color: #1a1a2e; /* Темный фон портала */
+    color: #ffffff;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+/* Карточка формы входа */
+.login-card {
+    background-color: #2d2d4a; /* Цвет левой панели из style.css */
+    padding: 40px;
+    border-radius: 8px;
+    border: 4px solid #3d3d5c; /* Рамка в стиле карточек */
+    box-shadow: 0 8px 0 #1a1a2e; /* Тень "вдавливания" */
+    width: 100%;
+    max-width: 400px;
+    box-sizing: border-box;
+}
+
+.login-card h2 {
+    margin-top: 0;
+    margin-bottom: 30px;
+    text-align: center;
+    color: #ffd700; /* Золотой заголовок */
+    text-shadow: 2px 2px 0 #000;
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 10px;
+    color: #ffd700; /* Золотые подписи полей */
+    font-size: 11px;
+    text-shadow: 1px 1px 0 #000;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 10px;
+    background-color: #1a1a2e; /* Темный фон поля */
+    border: 3px solid #5a5a8a; /* Синяя рамка */
+    color: #ffffff;
+    border-radius: 4px;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.form-group input:focus {
+    border-color: #7a7cff; /* Подсветка при клике */
+}
+
+/* Кнопки */
+button {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 4px;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 11px;
+    cursor: pointer;
+    margin-bottom: 15px;
+    transition: all 0.1s;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.4); /* 3D эффект кнопки */
+}
+
+button:active {
+    transform: translateY(4px);
+    box-shadow: none;
+}
+
+.btn-submit {
+    background-color: #69896a; /* Зеленый как кнопка добавления */
+    color: white;
+    border: 3px solid #203620;
+}
+
+.btn-submit:hover {
+    background-color: #7aa07b;
+}
+
+.btn-back {
+    background-color: #5a5a8a; /* Серо-синий как шапка */
+    color: white;
+    border: 3px solid #3d3d5c;
+    margin-bottom: 0;
+}
+
+.btn-back:hover {
+    background-color: #6b6ba0;
+}
+
+/* Ошибки */
+.error {
+    color: #ff5252;
+    font-size: 10px;
+    text-align: center;
+    margin-top: 15px;
+    text-shadow: 1px 1px 0 #000;
+}
+
+.hidden {
+    display: none;
+}

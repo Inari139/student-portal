@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Портал достижений студентов</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Портал достижений студентов</h1>
+    <div id="auth-block">
+      <span id="user-status">Гость</span>
+      <button id="auth-btn">Войти</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <aside class="left-sidebar">
+      <div class="sidebar-header">
+        <h2>Студенты</h2>
+      </div>
+      <ul id="students-list"></ul>
+
+      <div class="student-controls admin-only hidden">
+        <button id="add-student-btn" class="btn-control">➕ Добавить студента</button>
+        <button id="delete-student-btn" class="btn-control btn-danger">️ Удалить выбранного</button>
+        <button id="archive-student-btn" class="btn-control btn-archive">📦 Добавить в архив</button>
+      </div>
+    </aside>
+
+    <main class="right-sidebar">
+      <div class="tabs-nav">
+        <button id="tab-student" class="tab-btn active-tab">Мои достижения</button>
+        <button id="tab-template" class="tab-btn">Готовые достижения</button>
+        <button id="tab-profile" class="tab-btn">Профиль</button>
+        <button id="tab-archive" class="tab-btn admin-only">Архив</button>
+        <button id="tab-requests" class="tab-btn admin-only">Запросы <span id="requests-count" style="background:#ff5252;color:white;padding:2px 6px;border-radius:10px;font-size:8px;margin-left:5px;">0</span></button>
+      </div>
+
+      <div id="view-student" style="display: block;">
+        <div class="content-header">
+          <h2>Достижения</h2>
+          <button id="add-achievement-btn" class="admin-only hidden">➕ Добавить достижение</button>
+        </div>
+        <div id="achievements-container">
+          <p class="placeholder">Выберите студента из списка слева.</p>
+        </div>
+      </div>
+
+      <div id="view-template" style="display: none;">
+        <div class="content-header">
+          <div style="display: flex; align-items: center;">
+            <button id="back-to-categories">⬅ Назад к категориям</button>
+            <h2>Готовые шаблоны</h2>
+          </div>
+          <button id="add-template-btn" class="admin-only hidden">➕ Добавить шаблон</button>
+        </div>
+        <div id="templates-container"></div>
+      </div>
+
+      <div id="view-profile" style="display: none;">
+        <div class="content-header">
+          <h2>Личный кабинет</h2>
+        </div>
+        <div id="profile-content"></div>
+      </div>
+
+      <div id="view-archive" style="display: none;">
+        <div class="content-header">
+          <h2>Архив студентов</h2>
+        </div>
+        <div id="archived-container">
+          <p class="placeholder">Архив пуст.</p>
+        </div>
+      </div>
+
+      <div id="view-requests" style="display: none;">
+        <div class="content-header">
+          <h2>Запросы на достижения</h2>
+        </div>
+        <div id="requests-container">
+          <p class="placeholder">Нет новых запросов.</p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Модальное окно подтверждения -->
+  <div id="custom-confirm-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <h3>Подтверждение действия</h3>
+      <p id="modal-message">Текст сообщения</p>
+      <div class="modal-actions">
+        <button id="modal-confirm-btn" class="btn-control" style="background:#4caf50;">✓ Да, присвоить</button>
+        <button id="modal-cancel-btn" class="btn-control" style="background:#757575;">✕ Отмена</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно выбора аватарки -->
+  <div id="avatar-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <h3>📷 Выберите аватарку</h3>
+      <div id="avatar-grid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:15px; margin:20px 0;"></div>
+      <p style="color:#888; font-size:9px; margin-top:15px;">Или вставьте свою ссылку:</p>
+      <input type="text" id="custom-avatar-input" placeholder="https://example.com/my-avatar.jpg" style="width:100%; padding:8px; margin-top:5px;">
+      <div style="display:flex; gap:10px; justify-content:center; margin-top:15px;">
+        <button id="avatar-save-btn" class="btn-control" style="background:#4caf50;">✓ Применить</button>
+        <button id="avatar-cancel-btn" class="btn-control" style="background:#757575;">✕ Отмена</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно добавления достижения -->
+  <div id="add-achievement-modal" class="modal-overlay hidden">
+    <div class="modal-content modal-achievement">
+      <h3>✨ Новое достижение</h3>
+      <div class="form-group">
+        <label>Название:</label>
+        <input type="text" id="new-ach-title" placeholder="Настройка принтера">
+      </div>
+      <div class="form-group">
+        <label>Описание:</label>
+        <textarea id="new-ach-desc" rows="3" placeholder="Подключение и настройка сетевого принтера Kyocera"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Ссылка на иконку (необязательно):</label>
+        <input type="text" id="new-ach-bg" placeholder="https://example.com/icon.png">
+      </div>
+      <div class="form-group">
+        <label>Категория для диаграммы:</label>
+        <div id="category-selector" class="category-selector"></div>
+      </div>
+      <div style="display:flex; gap:10px; justify-content:center; margin-top:15px;">
+        <button id="save-new-ach" class="btn-control">✓ Сохранить</button>
+        <button id="cancel-new-ach" class="btn-control">✕ Отмена</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно добавления шаблона -->
+  <div id="add-template-modal" class="modal-overlay hidden">
+    <div class="modal-content modal-achievement">
+      <h3>✨ Новый шаблон</h3>
+      <div class="form-group">
+        <label>Название:</label>
+        <input type="text" id="new-template-title" placeholder="Установка Windows">
+      </div>
+      <div class="form-group">
+        <label>Описание:</label>
+        <textarea id="new-template-desc" rows="3" placeholder="Установка операционной системы Windows 10/11"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Ссылка на иконку (необязательно):</label>
+        <input type="text" id="new-template-bg" placeholder="https://example.com/icon.png или оставьте пустым">
+      </div>
+      <div style="display:flex; gap:10px; justify-content:center; margin-top:15px;">
+        <button id="save-new-template" class="btn-control">✓ Сохранить</button>
+        <button id="cancel-new-template" class="btn-control">✕ Отмена</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно добавления студента -->
+  <div id="add-student-modal" class="modal-overlay hidden">
+    <div class="modal-content modal-achievement">
+      <h3>👤 Новый студент</h3>
+      <div class="form-group">
+        <label>ФИО:</label>
+        <input type="text" id="new-student-name" placeholder="Иванов Иван Иванович">
+      </div>
+      <div class="form-group">
+        <label>Логин:</label>
+        <input type="text" id="new-student-login" placeholder="ivanov123 (любой логин)">
+      </div>
+      <div class="form-group">
+        <label>Пароль:</label>
+        <input type="text" id="new-student-password" placeholder="1234">
+      </div>
+      <div style="display:flex; gap:10px; justify-content:center; margin-top:15px;">
+        <button id="save-new-student" class="btn-control">✓ Создать</button>
+        <button id="cancel-new-student" class="btn-control">Отмена</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
+
+  
