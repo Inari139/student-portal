@@ -17,15 +17,15 @@ const db = getDatabase(app);
 document.getElementById('login-form').addEventListener('submit', async function(event) {
   event.preventDefault();
   
-  const loginInput = document.getElementById('login-input').value.trim();
-  const passwordInput = document.getElementById('password-input').value.trim();
+  const usernameInput = document.getElementById('username').value.trim();
+  const passwordInput = document.getElementById('password').value.trim();
   const errorMessage = document.getElementById('error-message');
   
   errorMessage.textContent = '';
   errorMessage.classList.add('hidden');
   
   // Проверка админа
-  if (loginInput === 'admin' && passwordInput === '1234') {
+  if (usernameInput === 'admin' && passwordInput === '1234') {
     localStorage.setItem('role', 'admin');
     localStorage.removeItem('studentId');
     window.location.href = 'index.html';
@@ -38,7 +38,7 @@ document.getElementById('login-form').addEventListener('submit', async function(
     const data = snapshot.val() || {};
     const students = Object.values(data);
     
-    const student = students.find(s => s.login === loginInput && s.password === passwordInput);
+    const student = students.find(s => s.login === usernameInput && s.password === passwordInput);
     
     if (student) {
       if (student.archived) {
