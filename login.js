@@ -24,7 +24,7 @@ document.getElementById('login-form').addEventListener('submit', async function(
   errorMessage.textContent = '';
   errorMessage.classList.add('hidden');
   
-  // Проверка админа
+  // 1. Проверка Админа
   if (usernameInput === 'admin' && passwordInput === '1234') {
     localStorage.setItem('role', 'admin');
     localStorage.removeItem('studentId');
@@ -32,7 +32,7 @@ document.getElementById('login-form').addEventListener('submit', async function(
     return;
   }
   
-  // Проверка студента через Firebase
+  // 2. Проверка Студентов через Firebase
   try {
     const snapshot = await get(ref(db, 'students'));
     const data = snapshot.val() || {};
