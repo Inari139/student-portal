@@ -38,7 +38,7 @@ document.getElementById('login-form').addEventListener('submit', async function(
     const data = snapshot.val() || {};
     const students = Object.values(data);
 
-    const student = students.find(s => s.login === usernameInput && s.password === passwordInput);
+    const student = students.find(s => s.login.trim() === usernameInput && s.password.trim() === passwordInput);
 
     if (student) {
       if (student.archived) {
