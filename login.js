@@ -16,14 +16,14 @@ const db = getDatabase(app);
 
 document.getElementById('login-form').addEventListener('submit', async function(event) {
   event.preventDefault();
-  
+
   const usernameInput = document.getElementById('username').value.trim();
   const passwordInput = document.getElementById('password').value.trim();
   const errorMessage = document.getElementById('error-message');
-  
+
   errorMessage.textContent = '';
   errorMessage.classList.add('hidden');
-  
+
   // 1. Проверка Админа
   if (usernameInput === 'admin' && passwordInput === '1234') {
     localStorage.setItem('role', 'admin');
@@ -31,22 +31,22 @@ document.getElementById('login-form').addEventListener('submit', async function(
     window.location.href = 'index.html';
     return;
   }
-  
+
   // 2. Проверка Студентов через Firebase
   try {
     const snapshot = await get(ref(db, 'students'));
     const data = snapshot.val() || {};
     const students = Object.values(data);
-    
+
     const student = students.find(s => s.login === usernameInput && s.password === passwordInput);
-    
+
     if (student) {
       if (student.archived) {
         errorMessage.textContent = 'Ваш аккаунт архивирован!';
         errorMessage.classList.remove('hidden');
         return;
       }
-      
+
       localStorage.setItem('role', 'student');
       localStorage.setItem('studentId', student.id);
       window.location.href = 'index.html';
