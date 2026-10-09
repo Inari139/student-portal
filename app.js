@@ -140,7 +140,7 @@ const currentRole = localStorage.getItem('role') || 'guest';
 const studentId = localStorage.getItem('studentId');
 
 // ============================================
-// 5. АВТОПОДПИСКА НА FIREBASE (Синхронизация)
+// 5. АВТОПОДПИСКА НА FIREBASE
 // ============================================
 onValue(ref(db, 'students'), (snapshot) => {
   const data = snapshot.val() || {};
@@ -464,15 +464,15 @@ function renderCards(container, dataArray, isStudentView) {
       if (currentRole === 'admin') {
         actionsHtml = `
           <div class="card-actions">
-            <button class="btn-edit" data-id="${item.id}">✏️</button>
+            <button class="btn-edit" data-id="${item.id}">️</button>
             <button class="btn-delete" data-id="${item.id}">🗑️</button>
-            ${!isStudentView ? `<button class="btn-assign" data-id="${item.id}"></button>` : ''}
+            ${!isStudentView ? `<button class="btn-assign" data-id="${item.id}">🎁</button>` : ''}
           </div>`;
       } else if (currentRole === 'student' && !isStudentView && !isAssigned) {
         if (hasRequest) {
           actionsHtml = `
             <div class="card-actions">
-              <button class="btn-requested" disabled style="opacity:0.6;cursor:not-allowed;"> Запрос отправлен</button>
+              <button class="btn-requested" disabled style="opacity:0.6;cursor:not-allowed;">⏳ Запрос отправлен</button>
             </div>`;
         } else {
           actionsHtml = `
@@ -581,7 +581,7 @@ function renderRequests() {
         </div>
         <div class="request-actions">
           <button class="btn-grant" data-request-id="${request.id}" data-student-id="${student.id}" data-template-id="${template.id}">✓ Выдать</button>
-          <button class="btn-reject" data-request-id="${request.id}">✕ Отклонить</button>
+          <button class="btn-reject" data-request-id="${request.id}"> Отклонить</button>
         </div>
       </div>
     `;
@@ -640,7 +640,7 @@ async function rejectRequest(requestId) {
 }
 
 // ============================================
-// 15. ЗАПРОС ДОСТИЖЕНИЯ (студент)
+// 15. ЗАПРОС ДОСТИЖЕНИЯ (СТУДЕНТ)
 // ============================================
 async function requestAchievement(templateId) {
   const template = cachedTemplates.find(t => t.id === templateId);
@@ -652,7 +652,7 @@ async function requestAchievement(templateId) {
     r.status === 'pending'
   );
   if (existingRequest) {
-    alert('️ Вы уже отправляли запрос на это достижение!');
+    alert('⚠️ Вы уже отправляли запрос на это достижение!');
     return;
   }
 
@@ -849,7 +849,7 @@ function renderProfile() {
   if (canEdit) {
     leftColumn += `
       <div style="display:flex; gap:10px; justify-content:center; margin-top:20px;">
-        <button onclick="editProfileAvatar(${student.id})" style="background:#5a5a8a; color:white; border:2px solid #3d3d5c; padding:8px 16px; border-radius:4px; cursor:pointer; font-family:'Press Start 2P', cursive; font-size:9px;"> Изменить фото</button>
+        <button onclick="editProfileAvatar(${student.id})" style="background:#5a5a8a; color:white; border:2px solid #3d3d5c; padding:8px 16px; border-radius:4px; cursor:pointer; font-family:'Press Start 2P', cursive; font-size:9px;">📷 Изменить фото</button>
         <button onclick="editProfileBio(${student.id})" style="background:#5a5a8a; color:white; border:2px solid #3d3d5c; padding:8px 16px; border-radius:4px; cursor:pointer; font-family:'Press Start 2P', cursive; font-size:9px;">✏️ Изменить описание</button>
       </div>
     `;
@@ -940,8 +940,8 @@ window.saveCredentials = async function(studentId) {
   const newLogin = document.getElementById('edit-login-input').value.trim();
   const newPassword = document.getElementById('edit-password-input').value.trim();
 
-  if (!newLogin) return alert('️ Логин не может быть пустым!');
-  if (!newPassword) return alert('️ Пароль не может быть пустым!');
+  if (!newLogin) return alert('⚠️ Логин не может быть пустым!');
+  if (!newPassword) return alert('⚠️ Пароль не может быть пустым!');
 
   const loginTaken = cachedStudents.some(s => s.login === newLogin && s.id !== studentId);
   if (loginTaken) return alert('⚠️ Этот логин уже занят другим студентом!');
@@ -1357,7 +1357,7 @@ function renderArchived() {
         ${currentRole === 'admin' ? `
           <div class="card-actions">
             <button class="btn-unarchive" data-id="${student.id}" title="Вернуть из архива">↩️</button>
-            <button class="btn-delete" data-id="${student.id}" title="Удалить навсегда">️</button>
+            <button class="btn-delete" data-id="${student.id}" title="Удалить навсегда">🗑️</button>
           </div>
         ` : ''}
       </div>
