@@ -1180,21 +1180,3 @@ header {
   color: #ffd700;
   padding: 5px;
 }
-
-/* === Цвета кнопок для модалки категории === */
-#save-new-category, #save-edit-category {
-  background-color: #4caf50 !important;
-  color: white !important;
-  border-color: #3d8a40 !important;
-}
-#save-new-category:hover, #save-edit-category:hover {
-  background-color: #5cbf60 !important;
-}
-#cancel-new-category, #cancel-edit-category {
-  background-color: #757575 !important;
-  color: white !important;
-  border-color: #5a5a5a !important;
-}
-#cancel-new-category:hover, #cancel-edit-category:hover {
-  background-color: #8a8a8a !important;
-}
