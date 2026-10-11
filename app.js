@@ -1469,12 +1469,12 @@ function renderArchived() {
 // ============================================
 async function startApp() {
   await initDatabase();
-
+  
+  // Ждём первую загрузку студентов
   await new Promise(resolve => {
-    const unsub = onValue(ref(db, 'students'), (snapshot) => {
+    onValue(ref(db, 'students'), (snapshot) => {
       const data = snapshot.val() || {};
       cachedStudents = Object.values(data);
-      unsub();
       resolve();
     }, { onlyOnce: true });
   });
@@ -1489,5 +1489,4 @@ async function startApp() {
 
   switchTab('student');
 }
-
 startApp();
