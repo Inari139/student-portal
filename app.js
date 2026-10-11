@@ -474,7 +474,7 @@ function renderCards(container, dataArray, isStudentView) {
       if (currentRole === 'admin') {
         actionsHtml = `
           <div class="card-actions">
-            <button class="btn-edit" data-id="${item.id}">️</button>
+            <button class="btn-edit" data-id="${item.id}">️✏️</button>
             <button class="btn-delete" data-id="${item.id}">🗑️</button>
             ${!isStudentView ? `<button class="btn-assign" data-id="${item.id}">🎁</button>` : ''}
           </div>`;
@@ -482,12 +482,12 @@ function renderCards(container, dataArray, isStudentView) {
         if (hasRequest) {
           actionsHtml = `
             <div class="card-actions">
-              <button class="btn-requested" disabled style="opacity:0.6;cursor:not-allowed;">⏳ Запрос отправлен</button>
+              <button class="btn-requested" disabled style="opacity:0.6;cursor:not-allowed;">Запрос отправлен</button>
             </div>`;
         } else {
           actionsHtml = `
             <div class="card-actions">
-              <button class="btn-request" data-id="${item.id}">📩 Запросить</button>
+              <button class="btn-request" data-id="${item.id}">Запросить</button>
             </div>`;
         }
       }
