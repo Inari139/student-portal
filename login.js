@@ -16,34 +16,20 @@ const db = getDatabase(app);
 
 document.getElementById('login-form').addEventListener('submit', async function(event) {
   event.preventDefault();
+
   const usernameInput = document.getElementById('username').value.trim();
   const passwordInput = document.getElementById('password').value.trim();
   const errorMessage = document.getElementById('error-message');
+
   errorMessage.textContent = '';
   errorMessage.classList.add('hidden');
 
-  // 1. Проверка Админа через Firebase
-  if (usernameInput === 'admin') {
-    try {
-      const snapshot = await get(ref(db, 'adminPassword'));
-      const adminPassword = snapshot.val();
-      
-      if (passwordInput === adminPassword) {
-        localStorage.setItem('role', 'admin');
-        localStorage.removeItem('studentId');
-        window.location.href = 'index.html';
-        return;
-      } else {
-        errorMessage.textContent = 'Неверный пароль администратора!';
-        errorMessage.classList.remove('hidden');
-        return;
-      }
-    } catch (error) {
-      errorMessage.textContent = 'Ошибка подключения к базе данных!';
-      errorMessage.classList.remove('hidden');
-      console.error(error);
-      return;
-    }
+  // 1. Проверка Админа
+  if (usernameInput === 'admin' && passwordInput === '1234') {
+    localStorage.setItem('role', 'admin');
+    localStorage.removeItem('studentId');
+    window.location.href = 'index.html';
+    return;
   }
 
   // 2. Проверка Студентов через Firebase
@@ -51,19 +37,16 @@ document.getElementById('login-form').addEventListener('submit', async function(
     const snapshot = await get(ref(db, 'students'));
     const data = snapshot.val() || {};
     const students = Object.values(data);
-    
-    // Используем .trim() для сравнения (в базе пароли с пробелами)
-    const student = students.find(s => 
-      s.login.trim() === usernameInput && 
-      s.password.trim() === passwordInput
-    );
-    
+
+    const student = students.find(s => s.login.trim() === usernameInput && s.password.trim() === passwordInput);
+
     if (student) {
       if (student.archived) {
         errorMessage.textContent = 'Ваш аккаунт архивирован!';
         errorMessage.classList.remove('hidden');
         return;
       }
+
       localStorage.setItem('role', 'student');
       localStorage.setItem('studentId', student.id);
       window.location.href = 'index.html';
