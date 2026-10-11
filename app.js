@@ -1301,36 +1301,98 @@ async function deleteItem(id, isTemplate) {
 // ============================================
 // 27. КАТЕГОРИИ
 // ============================================
-async function addNewCategory() {
-  const title = prompt('Название новой категории:');
-  if (!title) return;
-  const desc = prompt('Описание категории:') || '';
+// ============================================
+// 27. КАТЕГОРИИ (через модалки)
+// ============================================
 
-  const newId = title.toLowerCase().replace(/[^a-zа-я0-9]/g, '').substring(0, 10) + Date.now();
-  await set(ref(db, `categories/${newId}`), { id: newId, title, desc });
-}
+// Открыть модалку добавления категории
+window.openAddCategoryModal = function() {
+  const modal = document.getElementById('add-category-modal');
+  document.getElementById('new-cat-title').value = '';
+  document.getElementById('new-cat-desc').value = '';
+  document.getElementById('new-cat-bg').value = '';
+  modal.classList.remove('hidden');
+  setTimeout(() => document.getElementById('new-cat-title').focus(), 50);
+};
 
-async function editCategory(catId) {
+// Сохранить новую категорию
+document.getElementById('save-new-category')?.addEventListener('click', async () => {
+  const title = document.getElementById('new-cat-title').value.trim();
+  if (!title) return alert('⚠️ Название категории обязательно!');
+  
+  const desc = document.getElementById('new-cat-desc').value.trim();
+  const bg = document.getElementById('new-cat-bg').value.trim();
+  
+  // Генерируем уникальный ID из названия
+  const newId = title.toLowerCase()
+    .replace(/[^a-zа-яё0-9]/g, '')
+    .substring(0, 10) + '_' + Date.now();
+  
+  await set(ref(db, `categories/${newId}`), { 
+    id: newId, 
+    title, 
+    desc,
+    background: bg || ''
+  });
+  
+  document.getElementById('add-category-modal').classList.add('hidden');
+  alert(`✅ Категория "${title}" создана!`);
+});
+
+// Отмена добавления категории
+document.getElementById('cancel-new-category')?.addEventListener('click', () => {
+  document.getElementById('add-category-modal').classList.add('hidden');
+});
+
+// Открыть модалку редактирования категории
+window.openEditCategoryModal = function(catId) {
   const cat = cachedCategories.find(c => c.id === catId);
   if (!cat) return;
+  
+  document.getElementById('edit-cat-id').value = catId;
+  document.getElementById('edit-cat-title').value = cat.title;
+  document.getElementById('edit-cat-desc').value = cat.desc || '';
+  document.getElementById('edit-cat-bg').value = cat.background || '';
+  
+  document.getElementById('edit-category-modal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('edit-cat-title').focus(), 50);
+};
 
-  const newTitle = prompt('Новое название:', cat.title);
-  if (!newTitle) return;
-  const newDesc = prompt('Новое описание:', cat.desc);
+// Сохранить редактирование категории
+document.getElementById('save-edit-category')?.addEventListener('click', async () => {
+  const catId = document.getElementById('edit-cat-id').value;
+  const newTitle = document.getElementById('edit-cat-title').value.trim();
+  if (!newTitle) return alert('⚠️ Название категории обязательно!');
+  
+  const newDesc = document.getElementById('edit-cat-desc').value.trim();
+  const newBg = document.getElementById('edit-cat-bg').value.trim();
+  
+  await update(ref(db, `categories/${catId}`), { 
+    title: newTitle, 
+    desc: newDesc,
+    background: newBg
+  });
+  
+  document.getElementById('edit-category-modal').classList.add('hidden');
+  alert(`✅ Категория обновлена!`);
+});
 
-  await update(ref(db, `categories/${catId}`), { title: newTitle, desc: newDesc || '' });
-}
+// Отмена редактирования категории
+document.getElementById('cancel-edit-category')?.addEventListener('click', () => {
+  document.getElementById('edit-category-modal').classList.add('hidden');
+});
 
+// Удаление категории (оставляем confirm, так как это опасная операция)
 async function deleteCategory(catId) {
-  if (!confirm('Удалить эту категорию и ВСЕ достижения в ней?')) return;
-
+  const cat = cachedCategories.find(c => c.id === catId);
+  if (!cat) return;
+  if (!confirm(`Удалить категорию "${cat.title}" и ВСЕ шаблоны в ней?`)) return;
+  
   await remove(ref(db, `categories/${catId}`));
-
   const templatesInCat = cachedTemplates.filter(t => t.category === catId);
   for (const t of templatesInCat) {
     await remove(ref(db, `templates/${t.id}`));
   }
-
   if (currentCategory === catId) currentCategory = null;
 }
 
