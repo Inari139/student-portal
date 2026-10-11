@@ -375,7 +375,7 @@ function renderTemplatesView() {
         const editBtn = document.createElement('button');
         editBtn.innerHTML = '✏️';
         editBtn.className = 'btn-edit';
-        editBtn.onclick = (e) => { e.stopPropagation(); editCategory(cat.id); };
+        editBtn.onclick = (e) => { e.stopPropagation(); openEditCategoryModal(cat.id); };
 
         const delBtn = document.createElement('button');
         delBtn.innerHTML = '🗑️';
@@ -400,7 +400,7 @@ function renderTemplatesView() {
       addCatCard.style.borderStyle = 'dashed';
       addCatCard.style.opacity = '0.7';
       addCatCard.innerHTML = '<h3>➕ Добавить категорию</h3>';
-      addCatCard.addEventListener('click', () => addNewCategory());
+      addCatCard.addEventListener('click', () => openAddCategoryModal());
       container.appendChild(addCatCard);
     }
   } else {
