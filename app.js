@@ -367,21 +367,26 @@ function renderTemplatesView() {
 
       if (currentRole === 'admin') {
         const actions = document.createElement('div');
-        actions.className = 'card-actions';
+        actions.className = 'card-actions category-actions';
         actions.style.position = 'static';
         actions.style.marginTop = '10px';
         actions.style.justifyContent = 'center';
-
         const editBtn = document.createElement('button');
         editBtn.innerHTML = '✏️';
-        editBtn.className = 'btn-edit';
-        editBtn.onclick = (e) => { e.stopPropagation(); openEditCategoryModal(cat.id); };
-
-        const delBtn = document.createElement('button');
-        delBtn.innerHTML = '🗑️';
-        delBtn.className = 'btn-delete';
-        delBtn.onclick = (e) => { e.stopPropagation(); deleteCategory(cat.id); };
-
+        editBtn.className = 'btn-edit-category';
+        editBtn.dataset.catId = cat.id;
+        editBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        editCategory(cat.id);
+      });
+      const delBtn = document.createElement('button');
+      delBtn.innerHTML = '️';
+      delBtn.className = 'btn-delete-category';
+      delBtn.dataset.catId = cat.id;
+      delBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      deleteCategory(cat.id);
+      });
         actions.appendChild(editBtn);
         actions.appendChild(delBtn);
         card.appendChild(actions);
