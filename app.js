@@ -1437,13 +1437,12 @@ async function startApp() {
   await initDatabase();
 
   await new Promise(resolve => {
-    const unsub = onValue(ref(db, 'students'), (snapshot) => {
-      const data = snapshot.val() || {};
-      cachedStudents = Object.values(data);
-      unsub();
-      resolve();
-    }, { onlyOnce: true });
-  });
+  onValue(ref(db, 'students'), (snapshot) => {
+    const data = snapshot.val() || {};
+    cachedStudents = Object.values(data);
+    resolve();  // Просто резолвим промис
+  }, { onlyOnce: true });
+});
 
   if (cachedStudents.length > 0) {
     if (currentRole === 'student' && studentId) {
