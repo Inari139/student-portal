@@ -473,11 +473,11 @@ function renderCards(container, dataArray, isStudentView) {
       let actionsHtml = '';
       if (currentRole === 'admin') {
         actionsHtml = `
-          <div class="card-actions">
-            <button class="btn-edit" data-id="${item.id}">️✏️</button>
-            <button class="btn-delete" data-id="${item.id}">🗑️</button>
-            ${!isStudentView ? `<button class="btn-assign" data-id="${item.id}">🎁</button>` : ''}
-          </div>`;
+  <div class="card-actions">
+    <button class="btn-edit" data-id="${String(item.id)}">️✏️</button>
+    <button class="btn-delete" data-id="${String(item.id)}">🗑️</button>
+    ${!isStudentView ? `<button class="btn-assign" data-id="${String(item.id)}">🎁</button>` : ''}
+  </div>`;
       } else if (currentRole === 'student' && !isStudentView && !isAssigned) {
         if (hasRequest) {
           actionsHtml = `
@@ -514,10 +514,14 @@ function renderCards(container, dataArray, isStudentView) {
       else renderTemplatesView();
     }));
 
-    container.querySelectorAll('.btn-delete').forEach(btn => btn.addEventListener('click', e => {
-      e.stopPropagation();
-      deleteItem(parseInt(btn.dataset.id), !isStudentView);
-    }));
+    container.querySelectorAll('.btn-delete').forEach(btn => {
+   btn.addEventListener('click', e => {
+     e.stopPropagation();
+     const id = btn.getAttribute('data-id');
+     console.log('Клик по delete, data-id:', id);
+     deleteItem(id, !isStudentView);
+   });
+ });
 
     container.querySelectorAll('.btn-save').forEach(btn => btn.addEventListener('click', e => {
       e.stopPropagation();
@@ -1288,26 +1292,32 @@ async function saveEdit(id, isTemplate) {
 // 26. УДАЛЕНИЕ ДОСТИЖЕНИЯ/ШАБЛОНА
 // ============================================
 async function deleteItem(id, isTemplate) {
+  console.log(' deleteItem вызвана с:', { id, isTemplate, type: typeof id });
+  
+  if (!id || id === 'NaN' || id === null || id === undefined) {
+    console.error('❌ Неверный ID!', id);
+    alert('Ошибка: некорректный ID достижения!');
+    return;
+  }
+
   if (!confirm('Удалить это достижение?')) return;
 
   try {
-    const path = isTemplate ? `templates/${id}` : `achievements/${id}`;
+    const numericId = typeof id === 'string' ? id.split('/').pop() : id;
+    const path = isTemplate ? `templates/${numericId}` : `achievements/${numericId}`;
+    
     console.log(`🗑️ Удаляем: ${path}`);
-    
     await remove(ref(db, path));
-    
     console.log('✅ Удалено успешно');
     
-    if (editingId === id) editingId = null;
+    if (editingId === numericId) editingId = null;
     
-    // Перерисовываем в зависимости от того, где удаляем
     if (isTemplate) {
       renderTemplatesView();
     } else {
-      // Если удаляем достижение студента
       if (activeStudentId) {
         renderAchievements(activeStudentId);
-        renderProfile(); // Обновляем и профиль тоже
+        renderProfile();
       }
     }
   } catch (error) {
