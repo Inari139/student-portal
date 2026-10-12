@@ -1290,12 +1290,30 @@ async function saveEdit(id, isTemplate) {
 async function deleteItem(id, isTemplate) {
   if (!confirm('Удалить это достижение?')) return;
 
-  const path = isTemplate ? `templates/${id}` : `achievements/${id}`;
-  await remove(ref(db, path));
-
-  if (editingId === id) editingId = null;
-  if (isTemplate) renderTemplatesView();
-  else renderAchievements(activeStudentId);
+  try {
+    const path = isTemplate ? `templates/${id}` : `achievements/${id}`;
+    console.log(`🗑️ Удаляем: ${path}`);
+    
+    await remove(ref(db, path));
+    
+    console.log('✅ Удалено успешно');
+    
+    if (editingId === id) editingId = null;
+    
+    // Перерисовываем в зависимости от того, где удаляем
+    if (isTemplate) {
+      renderTemplatesView();
+    } else {
+      // Если удаляем достижение студента
+      if (activeStudentId) {
+        renderAchievements(activeStudentId);
+        renderProfile(); // Обновляем и профиль тоже
+      }
+    }
+  } catch (error) {
+    console.error('❌ Ошибка при удалении:', error);
+    alert('Ошибка при удалении: ' + error.message);
+  }
 }
 
 // ============================================
